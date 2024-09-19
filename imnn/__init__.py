@@ -1,14 +1,8 @@
 from ._imnn import (
     get_F, 
-    get_final_products,
     get_summaries_covariance,
     get_x,
     get_f_d_alpha
-)
-from .models import (
-    IMNNMLP,
-    IMNNCNN,
-    ArcSinhScaling
 )
 from .utils import (
     split_fiducials_and_derivatives,

@@ -1,16 +1,14 @@
-from typing import Tuple, List, Optional, Callable, Union
+from typing import Tuple, Optional
 import jax
 import jax.numpy as jnp
 import jax.random as jr 
 import equinox as eqx
+from jaxtyping import Key, Array, PyTree
 import optax
 
 from ._imnn import get_F
 
-Array = jnp.ndarray
-Key = jr.PRNGKey
-Net = eqx.Module
-OptState = optax.OptState
+OptState = PyTree
 GradientTransformation = optax.GradientTransformation
 
 
@@ -53,10 +51,9 @@ def get_r(covariance_reg, f=10., eps=0.1):
 
 @eqx.filter_jit
 def loss_fn(
-    net: Net, 
+    net: eqx.Module, 
     d0: Array, 
     fiducials_and_derivatives: Tuple[Array, Array], 
-    F_planck: Optional[Array] = None,
     f: float = 10., 
     eps: float = 0.1,
 ) -> Tuple[Array, Tuple[Array, Array, Array, Array, Array]]:
@@ -68,7 +65,7 @@ def loss_fn(
     """
     # Survey scale Finv later
     F, (_, _, C_f, C_f_inv) = get_F(
-        d0, net, fiducials_and_derivatives, F_planck
+        d0, net, fiducials_and_derivatives
     )
 
     # Maximise Fisher information, summaries covariance -> identity
@@ -84,10 +81,10 @@ def loss_fn(
 
 @eqx.filter_jit
 def update(
-    net: Net, 
-    grads: Net, 
+    net: eqx.Module, 
+    grads: eqx.Module, 
     opt_state: OptState, 
     optimizer: GradientTransformation
-) -> Tuple[Net, OptState]:
+) -> Tuple[eqx.Module, OptState]:
     updates, opt_state = optimizer.update(grads, opt_state, net) 
     return eqx.apply_updates(net, updates), opt_state 
