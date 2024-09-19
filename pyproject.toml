@@ -1,0 +1,40 @@
+[project]
+name = "imnn"
+version = "0.0.0"
+description = "Information-Maximising Neural Networks in JAX"
+readme = "README.md"
+requires-python ="~=3.12"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Jed Homer", email = "jedhmr@gmail.com"},
+]
+keywords = ["jax", "deep-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+urls = {repository = "https://github.com/homerjed/imnn"}
+
+dependencies = [
+    'jax',
+    'equinox',
+    'optax',
+    'ml_collections',
+    'numpy',
+    'matplotlib',
+    'cloudpickle',
+    'tqdm',
+    'chainconsumer',
+    'tensorflow_probability'
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["*"]
