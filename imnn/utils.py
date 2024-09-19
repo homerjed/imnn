@@ -80,7 +80,6 @@ class _InMemoryDataLoader(_AbstractDataLoader):
         self.parameters = parameters 
         self.key = key
 
-    @property 
     def n_batches(self, batch_size):
         return max(int(self.simulations.shape[0] / batch_size), 1)
 
@@ -115,12 +114,6 @@ class _InMemoryDataLoader(_AbstractDataLoader):
 def get_dataloaders(
     key, data_tuple_train, data_tuple_valid
 ):
-    # Xt, Yt = data_tuple_train
-    # Xv, Yv = data_tuple_valid
-    # return (
-    #     _InMemoryDataLoader(Xt, Yt, key=key), 
-    #     _InMemoryDataLoader(Xv, Yv, key=key)
-    # )
     Xt = data_tuple_train
     Xv = data_tuple_valid
     return (
@@ -138,78 +131,6 @@ def get_fiducials_derivatives_dataloaders(
         _InMemoryDataLoader(ft, ddt, key=key), 
         _InMemoryDataLoader(fv, ddv, key=key)
     )
-
-
-# def get_dataloaders(
-#     key,
-#     data_tuple_train,
-#     data_tuple_valid, 
-#     batch_size,
-#     valid_batch_size=None,
-#     repeat=False):
-#     n_train = data_tuple_train.shape[0] 
-
-#     train_dataset = tf.data.Dataset.from_tensor_slices(data_tuple_train)
-#     valid_dataset = tf.data.Dataset.from_tensor_slices(data_tuple_valid)
-
-#     seed = int(key.sum())
-
-#     if repeat:
-#         train_dataset = (
-#             train_dataset
-#             .repeat()
-#             .shuffle(n_train, seed=seed)
-#             .batch(batch_size, drop_remainder=True)
-#         )
-#         valid_dataset = valid_dataset.repeat()
-#     else:
-#         train_dataset = (
-#             train_dataset
-#             .shuffle(n_train, seed=seed)
-#             .batch(batch_size, drop_remainder=True)
-#         )
-
-#     valid_dataset = valid_dataset.batch(
-#         valid_batch_size if valid_batch_size is not None else batch_size
-#     ) 
-
-#     return (
-#         train_dataset.as_numpy_iterator(), 
-#         valid_dataset.as_numpy_iterator()
-#     )
-
-
-# def get_fiducials_derivatives_dataloader(
-#     rng, 
-#     fids_and_dd_train, 
-#     fids_and_dd_valid, 
-#     batch_size, 
-#     repeat=False
-# ):
-#     """ Get a dataloader that zips the fiducials and their derivatives together. """
-#     n_train, n_valid = len(fids_and_dd_train[0]), len(fids_and_dd_valid[0])
-
-#     train_dataset = tf.data.Dataset.from_tensor_slices(fids_and_dd_train)
-#     valid_dataset = tf.data.Dataset.from_tensor_slices(fids_and_dd_valid)
-
-#     seed = int(rng.sum())
-#     train_dataset = train_dataset.shuffle(n_train, seed=seed)
-
-#     if repeat:
-#         train_dataset = train_dataset.repeat()
-#         valid_dataset = valid_dataset.repeat()
-
-#     # Batch, attending to length of derivatives being greater than number of derivatives 
-#     train_dataset = train_dataset.batch(
-#         n_train if batch_size > n_train else batch_size, drop_remainder=True
-#     )
-#     valid_dataset = valid_dataset.batch(
-#         n_valid if batch_size > n_valid else batch_size, drop_remainder=True
-#     )
-#     return (
-#         train_dataset.as_numpy_iterator(), 
-#         valid_dataset.as_numpy_iterator()
-#     )
 
 
 def split_fiducials_and_derivatives(fiducials, derivatives, split):
@@ -242,39 +163,3 @@ def split_fiducials_and_derivatives(fiducials, derivatives, split):
         (fiducials_train, fiducials_valid),
         (_d0_train, _d0_valid),
     )
-
-
-def get_F_and_logdetF(Finv):
-    F = jnp.linalg.inv(Finv)
-    return F, np.prod(jnp.linalg.slogdet(F))
-
-
-def get_metric_arrays(_d0_train, _d0_valid, batch_size):
-    """
-        Returns containers for metrics in each epoch
-    """
-    L_steps_train = np.zeros((int(len(_d0_train) / batch_size) + 1, 2))
-    C_steps_train = np.zeros((int(len(_d0_train) / batch_size) + 1, 2))
-    L_steps_valid = np.zeros((int(len(_d0_valid) / batch_size) + 1, 2))
-    C_steps_valid = np.zeros((int(len(_d0_valid) / batch_size) + 1, 2))
-    return (
-        L_steps_train, L_steps_valid,
-        C_steps_train, C_steps_valid,
-    )
-
-def save_model(filename, hyperparams, model):
-    """
-        Make attribute of NDEs/IMNNs
-        that returns all attributes as a dict...
-    """
-    with open(filename, "wb") as f:
-        hyperparam_str = json.dumps(hyperparams)
-        f.write((hyperparam_str + "\n").encode())
-        eqx.tree_serialise_leaves(f, model)
-
-
-def load_model(model, filename):
-    with open(filename, "rb") as f:
-        hyperparameters = json.loads(f.readline().decode())
-        model = model(**hyperparameters)
-        return eqx.tree_deserialise_leaves(f, model)

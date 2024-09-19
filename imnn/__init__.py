@@ -13,9 +13,7 @@ from .models import (
 from .utils import (
     split_fiducials_and_derivatives,
     get_dataloaders,
-    get_F_and_logdetF,
     get_fiducials_derivatives_dataloaders,
-    get_metric_arrays,
     get_sharding
 )
 from .train import (
@@ -26,4 +24,3 @@ from .train import (
     get_r, 
     regularise_C_f
 )
-from .plots import plot_losses, plot_summaries
